@@ -1,0 +1,22 @@
+{
+  "name": "wallet-recovery-data-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "express": "^4.16.4",
+    "http-errors": "~1.6.2",
+    "json-rpc-tls": "^1.2.2",
+    "morgan": "~1.9.0",
+    "pug": "2.0.0-beta11"
+  },
+  "description": "Bridge between browser RESTful requests and electrum TCP TLS sockets",
+  "main": "app.js",
+  "devDependencies": {},
+  "author": "lacksfish",
+  "license": "MIT"
+}
