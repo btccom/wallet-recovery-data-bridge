@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var addressListUnspent = require('./routes/addressListUnspent');
+var estimateFeeRate = require('./routes/estimateFeeRate');
 var addressHasTransactions = require('./routes/addressHasTransactions');
 var publishTransaction = require('./routes/publishTransaction');
 
@@ -13,7 +14,6 @@ var esm = require('./services/electrumSocketEmitter');
 esm.connect('satoshi.vision.cash', 50002);
 
 var app = express();
-
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -27,6 +27,7 @@ app.use(function(req, res, next) {
 });
 
 app.use('/addressListUnspent', addressListUnspent);
+app.use('/estimateFeeRate', estimateFeeRate);
 app.use('/addressHasTransactions', addressHasTransactions);
 app.use('/publishTx', publishTransaction);
 
@@ -46,5 +47,5 @@ app.use(function(err, req, res, next) {
 });
 
 app.listen(8080, function () {
-    console.log(`Example app listening on port 8080`)
+    console.log(`Electrum bridge listening on port 8080`)
 });

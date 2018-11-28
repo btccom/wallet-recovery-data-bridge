@@ -28,10 +28,10 @@ router.post('/', async function (req, res, next) {
                 if (requestObj.result) {
                     requestObj.result.forEach(function (reqObjEntry) {
                         reqObjEntry["address"] = addr;
+                        // TODO: regenerate scriptPubKey - maybe not here though
                     });
                     results = results.concat(requestObj.result)
                 }
-
             }
         }
     } else {
