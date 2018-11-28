@@ -14,21 +14,18 @@ router.post('/', async function (req, res, next) {
 
     if (Array.isArray(address)) {
         address = utils.uniq(address);
-        let pendingRequests = [];
-        address.forEach(function (addr) {
-            let pending = esm.electrumRequest('blockchain.address.get_history', [addr]);
-            pendingRequests.push(pending);
+        let resultsRequests = [];
+
+        await utils.asyncForEach(address, async function (addr) {
+            let pending = await esm.electrumRequest('blockchain.address.get_history', [addr]);
+            resultsRequests.push(pending);
         });
 
-        await Promise.all(pendingRequests)
-            .then(function (resultsRequests) {
-                resultsRequests.forEach(function (request) {
-                    let requestObj = JSON.parse(request);
-                    if (requestObj.result) results = results.concat(requestObj.result);
-                });
-            }).catch(function (ex) {
-                console.error(ex);
-            }); // gotta have that concurrency
+        resultsRequests.forEach(function (request) {
+            let requestObj = JSON.parse(request);
+            if (requestObj.result) results = results.concat(requestObj.result);
+        });
+
     } else {
         let txidList = await esm.electrumRequest('blockchain.address.get_history', [address]);
         let txidSet = JSON.parse(txidList);

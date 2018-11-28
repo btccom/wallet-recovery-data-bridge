@@ -13,6 +13,13 @@ function uniq_fast(a) {
     return out;
 }
 
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+        await callback(array[index], index, array);
+    }
+}
+
 module.exports = {
-    uniq: uniq_fast
+    uniq: uniq_fast,
+    asyncForEach: asyncForEach
 };

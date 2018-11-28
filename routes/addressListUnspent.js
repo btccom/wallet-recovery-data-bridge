@@ -14,25 +14,35 @@ router.post('/', async function (req, res, next) {
 
     if (Array.isArray(address)) {
         address = utils.uniq(address);
-        let pendingRequests = [];
-        address.forEach(function (addr) {
-            let pending = esm.electrumRequest('blockchain.address.listunspent', [addr]);
-            pendingRequests.push(pending);
+        let pendingRequests = {};
+
+        await utils.asyncForEach(address, async function (addr) {
+            pendingRequests[addr] = await esm.electrumRequest('blockchain.address.listunspent', [addr]);
         });
 
-        await Promise.all(pendingRequests)
-            .then(function (resultsRequests) {
-                resultsRequests.forEach(function (request) {
-                    let requestObj = JSON.parse(request);
-                    if (requestObj.result) results = results.concat(requestObj.result);
-                });
-            }).catch(function (ex) {
-                console.error(ex);
-            }); // gotta have that concurrency
+        for (let addr in pendingRequests) {
+            if (pendingRequests.hasOwnProperty(addr)) {
+                let resultRequest = pendingRequests[addr];
+                let requestObj = JSON.parse(resultRequest);
+
+                if (requestObj.result) {
+                    requestObj.result.forEach(function (reqObjEntry) {
+                        reqObjEntry["address"] = addr;
+                    });
+                    results = results.concat(requestObj.result)
+                }
+
+            }
+        }
     } else {
         let txidList = await esm.electrumRequest('blockchain.address.listunspent', [address]);
         let txidSet = JSON.parse(txidList);
-        if (txidSet.result) results = txidSet.result;
+        if (txidSet.result) {
+            txidSet.result.forEach(function (reqObjEntry) {
+                reqObjEntry["address"] = address;
+            });
+            results = txidSet.result;
+        }
     }
 
     if (results) {
