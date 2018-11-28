@@ -1,22 +1,42 @@
 var express = require('express');
 var router = express.Router();
 var esm = require('../services/electrumSocketEmitter');
+var utils = require('../services/utils');
 
 router.post('/', async function (req, res, next) {
-    var address = req.body.address ? req.body.address : "";
+    let address = req.body.address ? req.body.address : "";
     if (!address) {
         res.send(false);
         return;
     }
-
-    const txidList = await esm.electrumRequest('blockchain.address.get_history', [address]);
-    const txidSet = JSON.parse(txidList);
-
     res.setHeader('Content-Type', 'application/json');
-    console.log(txidSet);
+    let results = [];
 
-    if (txidSet.result) {
-        res.send(txidSet.result);
+    if (Array.isArray(address)) {
+        address = utils.uniq(address);
+        let pendingRequests = [];
+        address.forEach(function (addr) {
+            let pending = esm.electrumRequest('blockchain.address.get_history', [addr]);
+            pendingRequests.push(pending);
+        });
+
+        await Promise.all(pendingRequests)
+            .then(function (resultsRequests) {
+                resultsRequests.forEach(function (request) {
+                    let requestObj = JSON.parse(request);
+                    if (requestObj.result) results = results.concat(requestObj.result);
+                });
+            }).catch(function (ex) {
+                console.error(ex);
+            }); // gotta have that concurrency
+    } else {
+        let txidList = await esm.electrumRequest('blockchain.address.get_history', [address]);
+        let txidSet = JSON.parse(txidList);
+        if (txidSet.result) results = txidSet.result;
+    }
+
+    if (results) {
+        res.send(results);
     } else {
         res.send(false);
     }
