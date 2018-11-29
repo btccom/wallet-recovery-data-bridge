@@ -20,6 +20,7 @@ router.get('/', async function (req, res, next) {
     if (result) {
         res.send(result);
     } else {
+        res.status(400);
         res.send(false);
     }
 });

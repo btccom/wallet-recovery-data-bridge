@@ -19,8 +19,9 @@ router.post('/', async function (req, res, next) {
 
     if (publishResultObj.result) {
         res.send({ 'txid': publishResultObj.result });
-    } else {
-        res.send(false);
+    } else if (publishResultObj.error && publishResultObj.error.message) {
+        res.status(400);
+        res.send(publishResultObj.error.message);
     }
 });
 
