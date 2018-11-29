@@ -29,6 +29,13 @@ connect = function(serverAddr, serverPort) {
             socket.setNoDelay(true);
             globalSocket = socket;
             console.log(`Connected on ${serverAddr}, port ${serverPort}`);
+            // set heartbeat
+            (async function heartbeat() {
+                console.debug("heartbeat sent");
+                await electrumRequest('blockchain.estimatefee', [3]);
+                console.debug("heartbeat received");
+                setTimeout(heartbeat, 60 * 1000)
+            })();
         }).catch((error) => {
             console.log(error.error);
             Socket.close(error.socket);
