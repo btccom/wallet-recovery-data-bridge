@@ -16,8 +16,9 @@ router.post('/', async function (req, res, next) {
     res.setHeader('Content-Type', 'application/json');
     console.log(publishResultObj);
 
+
     if (publishResultObj.result) {
-        res.send(publishResultObj.result);
+        res.send({ 'txid': publishResultObj.result });
     } else {
         res.send(false);
     }
