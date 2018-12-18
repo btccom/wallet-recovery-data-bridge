@@ -9,9 +9,14 @@ var estimateFeeRate = require('./routes/estimateFeeRate');
 var addressHasTransactions = require('./routes/addressHasTransactions');
 var publishTransaction = require('./routes/publishTransaction');
 
+// config
+var electrumServerHost = process.env.ELECTRUM_SERVER || "satoshi.vision.cash";
+var electrumServerPort = process.env.ELECTRUM_SERVER_PORT || 50002;
+var serverPort = procerss.env.SERVER_PORT || 8080;
+
 // Init network connection
 var esm = require('./services/electrumSocketEmitter');
-esm.connect(process.env.ELECTRUM_SERVER || "satoshi.vision.cash", 50002);
+esm.connect(electrumServerHost, electrumServerPort);
 
 var app = express();
 
@@ -46,6 +51,6 @@ app.use(function(err, req, res, next) {
   res.send("");
 });
 
-app.listen(process.env.SERVER_PORT || 8080, function () {
-    console.log(`Electrum bridge listening on port 8080`)
+app.listen(serverPort, function () {
+    console.log(`Electrum bridge listening on port ` + serverPort)
 });
