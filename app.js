@@ -46,6 +46,6 @@ app.use(function(err, req, res, next) {
   res.send("");
 });
 
-app.listen(8080, function () {
+app.listen(process.env.SERVER_PORT || 8080, function () {
     console.log(`Electrum bridge listening on port 8080`)
 });
