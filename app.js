@@ -11,7 +11,7 @@ var publishTransaction = require('./routes/publishTransaction');
 
 // Init network connection
 var esm = require('./services/electrumSocketEmitter');
-esm.connect('satoshi.vision.cash', 50002);
+esm.connect(process.env.ELECTRUM_SERVER || "satoshi.vision.cash", 50002);
 
 var app = express();
 
