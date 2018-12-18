@@ -12,7 +12,7 @@ var publishTransaction = require('./routes/publishTransaction');
 // config
 var electrumServerHost = process.env.ELECTRUM_SERVER || "satoshi.vision.cash";
 var electrumServerPort = process.env.ELECTRUM_SERVER_PORT || 50002;
-var serverPort = procerss.env.SERVER_PORT || 8080;
+var serverPort = process.env.SERVER_PORT || 8080;
 
 // Init network connection
 var esm = require('./services/electrumSocketEmitter');
