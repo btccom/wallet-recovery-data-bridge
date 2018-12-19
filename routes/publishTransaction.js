@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var esm = require('../services/electrumSocketEmitter');
+var logger = require('../services/logger').winston;
 
 router.post('/', async function (req, res, next) {
     var txhex = req.body.tx ? req.body.tx : "";
@@ -14,8 +15,7 @@ router.post('/', async function (req, res, next) {
     const publishResultObj = JSON.parse(publishResult);
 
     res.setHeader('Content-Type', 'application/json');
-    console.log(publishResultObj);
-
+    logger.info(publishResultObj);
 
     if (publishResultObj.result) {
         res.send({ 'txid': publishResultObj.result });

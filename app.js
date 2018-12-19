@@ -2,7 +2,11 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var morgan = require('morgan');
+var logger = require('./services/logger');
+
+// Override max event listerner limits for request bursts
+require('events').EventEmitter.prototype._maxListeners = 1000000;
 
 var addressListUnspent = require('./routes/addressListUnspent');
 var estimateFeeRate = require('./routes/estimateFeeRate');
@@ -20,7 +24,7 @@ esm.connect(electrumServerHost, electrumServerPort);
 
 var app = express();
 
-app.use(logger('dev'));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

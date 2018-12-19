@@ -1,14 +1,15 @@
 const Socket = require('json-rpc-tls').Socket;
+let logger = require('./logger').winston;
 
-var connection;
-var globalSocket;
-var idx = 0;
+let connection;
+let globalSocket;
+let idx = 0;
 
-var globalServerAddr = "";
-var globalServerPort = 50002;
+let globalServerAddr = "";
+let globalServerPort = 50002;
 
 connect = function(serverAddr, serverPort) {
-    console.log(`Connecting to ${serverAddr} on port ${serverPort}...`);
+    logger.info(`Connecting to ${serverAddr} on port ${serverPort}...`);
     if (serverAddr) {
         globalServerAddr = serverAddr;
     }
@@ -28,23 +29,22 @@ connect = function(serverAddr, serverPort) {
             socket.setKeepAlive(true, 0);
             socket.setNoDelay(true);
             globalSocket = socket;
-            console.log(`Connected on ${serverAddr}, port ${serverPort}`);
+            logger.info(`Connected on ${serverAddr}, port ${serverPort}`);
             // set heartbeat
             (async function heartbeat() {
-                console.debug("heartbeat sent");
+                logger.debug("heartbeat sent");
                 await electrumRequest('blockchain.estimatefee', [3]);
-                console.debug("heartbeat received");
+                logger.debug("heartbeat received");
                 setTimeout(heartbeat, 60 * 1000)
             })();
         }).catch((error) => {
-            console.log(error.error);
+            logger.info(error.error);
             Socket.close(error.socket);
         });
     }
 
     return connection;
 };
-
 
 electrumRequest = function (type, params) {
     if (!globalSocket.destroyed) {
