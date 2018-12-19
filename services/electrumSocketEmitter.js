@@ -1,9 +1,11 @@
 const Socket = require('json-rpc-tls').Socket;
 let logger = require('./logger').winston;
+let AsyncLock = require('async-lock');
 
 let connection;
 let globalSocket;
 let idx = 0;
+let globalLock = new AsyncLock();
 
 let globalServerAddr = "";
 let globalServerPort = 50002;
@@ -46,20 +48,43 @@ connect = function(serverAddr, serverPort) {
     return connection;
 };
 
+// Because Promise.defer() is not a function and we shouldn't have to import 'q' for this
+// https://stackoverflow.com/a/27890038
+function defer() {
+    let deferred = {};
+    let promise = new Promise(function(resolve, reject) {
+        deferred.reject  = reject;
+        deferred.resolve = resolve;
+    });
+    deferred.promise = promise;
+    return deferred;
+}
+
+
 electrumRequest = function (type, params) {
-    if (!globalSocket.destroyed) {
-        return Socket.request(
-            globalSocket,
-            idx++, // increment req index
-            type,
-            params ? params : []
-        );
-    } else {
-        connection = null;
-        idx = 0;
-        return connect(globalServerAddr, globalServerPort)
-            .then(electrumRequest(type, params));
-    }
+    let deferred = defer();
+
+    globalLock.acquire("req", async function (done) {
+        logger.debug("lock acquired");
+        if (!globalSocket.destroyed) {
+            let response = await Socket.request(
+                globalSocket,
+                idx++, // increment req index
+                type,
+                params ? params : []
+            );
+            deferred.resolve(response);
+            done();
+        } else {
+            connection = null;
+            idx = 0;
+            done();
+            deferred.resolve(connect(globalServerAddr, globalServerPort)
+                .then(electrumRequest(type, params)));
+        }
+    }, function () { logger.debug("lock released")}, { });
+
+    return deferred.promise;
 };
 
 module.exports = {
