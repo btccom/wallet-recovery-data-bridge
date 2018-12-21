@@ -1,14 +1,17 @@
 const Socket = require('json-rpc-tls').Socket;
+let logger = require('./logger').winston;
+let AsyncLock = require('async-lock');
 
-var connection;
-var globalSocket;
-var idx = 0;
+let connection;
+let globalSocket;
+let idx = 0;
+let globalLock = new AsyncLock();
 
-var globalServerAddr = "";
-var globalServerPort = 50002;
+let globalServerAddr = "";
+let globalServerPort = 50002;
 
 connect = function(serverAddr, serverPort) {
-    console.log(`Connecting to ${serverAddr} on port ${serverPort}...`);
+    logger.info(`Connecting to ${serverAddr} on port ${serverPort}...`);
     if (serverAddr) {
         globalServerAddr = serverAddr;
     }
@@ -28,16 +31,16 @@ connect = function(serverAddr, serverPort) {
             socket.setKeepAlive(true, 0);
             socket.setNoDelay(true);
             globalSocket = socket;
-            console.log(`Connected on ${serverAddr}, port ${serverPort}`);
+            logger.info(`Connected on ${serverAddr}, port ${serverPort}`);
             // set heartbeat
             (async function heartbeat() {
-                console.debug("heartbeat sent");
+                logger.debug("heartbeat sent");
                 await electrumRequest('blockchain.estimatefee', [3]);
-                console.debug("heartbeat received");
+                logger.debug("heartbeat received");
                 setTimeout(heartbeat, 60 * 1000)
             })();
         }).catch((error) => {
-            console.log(error.error);
+            logger.info(error.error);
             Socket.close(error.socket);
         });
     }
@@ -45,21 +48,43 @@ connect = function(serverAddr, serverPort) {
     return connection;
 };
 
+// Because Promise.defer() is not a function and we shouldn't have to import 'q' for this
+// https://stackoverflow.com/a/27890038
+function defer() {
+    let deferred = {};
+    let promise = new Promise(function(resolve, reject) {
+        deferred.reject  = reject;
+        deferred.resolve = resolve;
+    });
+    deferred.promise = promise;
+    return deferred;
+}
+
 
 electrumRequest = function (type, params) {
-    if (!globalSocket.destroyed) {
-        return Socket.request(
-            globalSocket,
-            idx++, // increment req index
-            type,
-            params ? params : []
-        );
-    } else {
-        connection = null;
-        idx = 0;
-        return connect(globalServerAddr, globalServerPort)
-            .then(electrumRequest(type, params));
-    }
+    let deferred = defer();
+
+    globalLock.acquire("req", async function (done) {
+        logger.debug("lock acquired");
+        if (!globalSocket.destroyed) {
+            let response = await Socket.request(
+                globalSocket,
+                idx++, // increment req index
+                type,
+                params ? params : []
+            );
+            deferred.resolve(response);
+            done();
+        } else {
+            connection = null;
+            idx = 0;
+            done();
+            deferred.resolve(connect(globalServerAddr, globalServerPort)
+                .then(electrumRequest(type, params)));
+        }
+    }, function () { logger.debug("lock released")}, { });
+
+    return deferred.promise;
 };
 
 module.exports = {
