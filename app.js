@@ -4,6 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var morgan = require('morgan');
 var logger = require('./services/logger');
+var bodyParser = require('body-parser');
 
 // Override max event listerner limits for request bursts
 require('events').EventEmitter.prototype._maxListeners = 1000000;
@@ -28,7 +29,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.bodyParser({limit: '50mb'}));
+app.use(bodyParser({limit: '50mb'}));
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
