@@ -15,7 +15,7 @@ var addressHasTransactions = require('./routes/addressHasTransactions');
 var publishTransaction = require('./routes/publishTransaction');
 
 // config
-var electrumServerHost = process.env.ELECTRUM_SERVER || "satoshi.vision.cash";
+var electrumServerHost = process.env.ELECTRUM_SERVER || "electrumx.bitcoinsv.io";
 var electrumServerPort = process.env.ELECTRUM_SERVER_PORT || 50002;
 var serverPort = process.env.SERVER_PORT || 8080;
 
