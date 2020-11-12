@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var esm = require('../services/electrumSocketEmitter');
 var utils = require('../services/utils');
+var bitcoin = require('bitcoinjs-lib');
+
 
 router.post('/', async function (req, res, next) {
     let address = req.body.address ? req.body.address : "";
@@ -17,7 +19,10 @@ router.post('/', async function (req, res, next) {
         let pendingRequests = {};
 
         await utils.asyncForEach(address, async function (addr) {
-            pendingRequests[addr] = await esm.electrumRequest('blockchain.address.listunspent', [addr]);
+            let script = bitcoin.address.toOutputScript(addr);
+            let hash = bitcoin.crypto.sha256(script).reverse().toString('hex');
+
+            pendingRequests[addr] = await esm.electrumRequest('blockchain.scripthash.listunspent', [hash]);
         });
 
         for (let addr in pendingRequests) {
@@ -35,7 +40,10 @@ router.post('/', async function (req, res, next) {
             }
         }
     } else {
-        let txidList = await esm.electrumRequest('blockchain.address.listunspent', [address]);
+        let script = bitcoin.address.toOutputScript(address);
+        let hash = bitcoin.crypto.sha256(script).reverse().toString('hex');
+
+        let txidList = await esm.electrumRequest('blockchain.scripthash.listunspent', [hash]);
         let txidSet = JSON.parse(txidList);
         if (txidSet.result) {
             txidSet.result.forEach(function (reqObjEntry) {
