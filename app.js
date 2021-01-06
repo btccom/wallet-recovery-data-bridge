@@ -15,7 +15,7 @@ var addressHasTransactions = require('./routes/addressHasTransactions');
 var publishTransaction = require('./routes/publishTransaction');
 
 // config
-var electrumServerHost = process.env.ELECTRUM_SERVER || "sv2.satoshi.io";
+var electrumServerHost = process.env.ELECTRUM_SERVER || "sv.satoshi.io";
 var electrumServerPort = process.env.ELECTRUM_SERVER_PORT || 50002;
 var serverPort = process.env.SERVER_PORT || 8080;
 
