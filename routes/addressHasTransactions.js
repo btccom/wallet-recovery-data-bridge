@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var esm = require('../services/electrumSocketEmitter');
 var utils = require('../services/utils');
+var bitcoin = require('bitcoinjs-lib');
 
 router.post('/', async function (req, res, next) {
     let address = req.body.address ? req.body.address : "";
@@ -17,7 +18,10 @@ router.post('/', async function (req, res, next) {
         let resultsRequests = [];
 
         await utils.asyncForEach(address, async function (addr) {
-            let pending = await esm.electrumRequest('blockchain.address.get_history', [addr]);
+            let script = bitcoin.address.toOutputScript(addr);
+            let hash = bitcoin.crypto.sha256(script).reverse().toString('hex');
+
+            let pending = await esm.electrumRequest('blockchain.scripthash.get_history', [hash]);
             resultsRequests.push(pending);
         });
 
@@ -27,7 +31,10 @@ router.post('/', async function (req, res, next) {
         });
 
     } else {
-        let txidList = await esm.electrumRequest('blockchain.address.get_history', [address]);
+        let script = bitcoin.address.toOutputScript(address);
+        let hash = bitcoin.crypto.sha256(script).reverse().toString('hex');
+
+        let txidList = await esm.electrumRequest('blockchain.scripthash.get_history', [hash]);
         let txidSet = JSON.parse(txidList);
         if (txidSet.result) results = txidSet.result;
     }
