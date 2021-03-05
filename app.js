@@ -29,7 +29,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(bodyParser({limit: '50mb'}));
+app.use(bodyParser.json({limit: '50mb'}));
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
